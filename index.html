@@ -7,31 +7,58 @@
       content="initial-scale=1,maximum-scale=1,user-scalable=no"
     />
     <title>NearMe</title>
-    <style>
-      html,
-      body,
-      #viewDiv {
-        padding: 0;
-        margin: 0;
-        height: 100%;
-        width: 100%;
-      }
-    </style>
 
-    <link
-      rel="stylesheet"
-      href="https://js.arcgis.com/4.15/esri/themes/light/main.css"
-    />
     <link
       rel="stylesheet"
       href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.15/esri/css/main.css"
+    />
+
     <script src="https://js.arcgis.com/4.15/"></script>
 
+    <style>
+      html,
+      body {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+      }
+      .divBase {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 70%;
+      }
+      .divPanel {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 30%;
+      }
+      #panelDiv {
+        float: left;
+      }
+      #viewDiv {
+        float: right;
+      }
+    </style>
     <script src="./app.js"></script>
   </head>
 
   <body>
-    <div id="viewDiv"></div>
+    <div style="height: 100%;">
+      <div class="divPanel" id="panelDiv">
+        <div class="panel modifier-class panel-dark">
+          <h4 class="trailer-half">This is a panel.</h4>
+          <p class="trailer-0">
+            Panels set <code>background-color</code> and frame content.
+          </p>
+        </div>
+      </div>
+      <div class="divBase" id="viewDiv"></div>
+    </div>
   </body>
 </html>

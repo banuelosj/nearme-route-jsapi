@@ -10,14 +10,28 @@ require([
   });
 
   const map = new Map({
-    basemap: "gray-vector",
+    basemap: "streets",
     layers: [facilitiesLayer],
   });
 
   const view = new MapView({
     container: "viewDiv",
     map: map,
-    center: [106.79, 38.23],
-    zoom: 3,
+    center: [-118.165526, 34.032336],
+    zoom: 12,
   });
+
+  view.on("click", clickHandler);
+
+  function clickHandler(event) {
+    view.hitTest(event).then((response) => {
+      if (response.results.length) {
+        const graphic = response.results.filter((result) => {
+          return result.graphic.layer === facilitiesLayer;
+        })[0].graphic;
+
+        console.log(graphic.attributes);
+      }
+    });
+  }
 });
