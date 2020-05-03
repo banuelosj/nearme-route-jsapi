@@ -1,0 +1,24 @@
+html,
+body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+.divBase {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 70%;
+}
+.divPanel {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 30%;
+}
+#panelDiv {
+  float: left;
+}
+#viewDiv {
+  float: right;
+}
