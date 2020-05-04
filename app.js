@@ -147,7 +147,8 @@ require([
 
     for (let i = 0; i < features.length; i++) {
       const attrs = features[i].attributes;
-      const distanceToRadius = getDistance(centerPoint, features[i].geometry).toFixed(2);
+      const locationGeometry = features[i].geometry;
+      const distanceToRadius = getDistance(centerPoint, locationGeometry).toFixed(2);
       //getDistance(centerPoint, features[i].geometry);
       card = `
          <div class="card card-wide card-bar-blue" >
@@ -155,7 +156,7 @@ require([
               <h4 class="trailer-half">${attrs.NAME}</h4>
               <p>FIPS: ${attrs.STCTYFIPS}</p>
               <p>${distanceToRadius} miles</p>
-              <a href="#" class="btn btn-fill leader-1">Directions</a>
+              <a href="https://www.google.com/maps/search/?api=1&query=${locationGeometry.latitude},${locationGeometry.longitude}" class="btn btn-fill leader-1">Directions</a>
           </div>
          </div>
      `;
