@@ -19,7 +19,7 @@ require([
 
   const facilitiesLayer = new FeatureLayer({
     url:
-      "https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer/0",
+      "https://services.arcgis.com/Wl7Y1m92PbjtJs5n/ArcGIS/rest/services/hospitalTestData/FeatureServer/0",
     outFields: ["*"],
   });
 
@@ -107,7 +107,7 @@ require([
     query.geometry = buffer;
 
     layer.queryFeatures(query).then((results) => {
-      if (results.length > 0) {
+      if (results.features.length) {
         displayLocations(results.features);
         populateCards(results.features);
       } else {
@@ -139,18 +139,25 @@ require([
 
   function populateCards(features) {
     const cardArray = [];
+    const cardsList = document.getElementById('cardsList');
+    cardsList.innerHTML = '';
+
     for (let i = 0; i < features.length; i++) {
+      let attrs = features[i].attributes;
       let card = `
-         <div class="card card-wide">
-         <div class="card-content">
-            <h4 class="trailer-half">${features[i].areaname}</h4>
-            <p>City: ${features[i].areaname}</p>
-            <p>Population: ${features[i].pop2000}</p>
-            <p>State: ${features[i].st}</p>
-         </div>
+         <div class="card card-wide card-bar-blue" id=${i}>
+          <div class="card-content">
+              <h4 class="trailer-half">${attrs.NAME}</h4>
+              <p>Hospital: ${attrs.NAME}</p>
+              <p>FIPS: ${attrs.STCTYFIPS}</p>
+              <p>x: ${features[i].geometry.x}</p>
+              <p>x: ${features[i].geometry.y}</p>
+          </div>
          </div>
      `;
       cardArray.push(card);
+      cardsList.innerHTML += card;
     }
   }
+
 });
