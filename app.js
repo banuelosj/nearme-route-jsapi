@@ -5,13 +5,15 @@ require([
   "esri/layers/GraphicsLayer",
   "esri/Graphic",
   "esri/geometry/geometryEngine",
+  "esri/geometry/Polyline"
 ], function (
   MapView,
   Map,
   FeatureLayer,
   GraphicsLayer,
   Graphic,
-  geometryEngine
+  geometryEngine,
+  Polyline
 ) {
   const radius = 5;
   const distanceUnits = "miles";
@@ -48,7 +50,7 @@ require([
         addPointToMap(mapPoint);
         // create the buffer to display and for the query
         const buffer = addBuffer(mapPoint);
-        findFacilities(buffer, facilitiesLayer);
+        findFacilities(buffer, facilitiesLayer, mapPoint);
       }
     });
   }
@@ -98,7 +100,7 @@ require([
   }
 
   // query nearby facilities within a certain radious
-  function findFacilities(buffer, layer) {
+  function findFacilities(buffer, layer, centerPoint) {
     const query = layer.createQuery();
     query.returnGeometry = true;
     //  query.distance = radius;
@@ -109,7 +111,7 @@ require([
     layer.queryFeatures(query).then((results) => {
       if (results.features.length) {
         displayLocations(results.features);
-        populateCards(results.features);
+        populateCards(results.features, centerPoint);
       } else {
         console.log("no results returned from query");
       }
@@ -137,27 +139,53 @@ require([
     });
   }
 
-  function populateCards(features) {
+  function populateCards(features, centerPoint) {
     const cardArray = [];
     const cardsList = document.getElementById('cardsList');
     cardsList.innerHTML = '';
+    let card = '';
 
     for (let i = 0; i < features.length; i++) {
-      let attrs = features[i].attributes;
-      let card = `
-         <div class="card card-wide card-bar-blue" id=${i}>
-          <div class="card-content">
+      const attrs = features[i].attributes;
+      const distanceToRadius = getDistance(centerPoint, features[i].geometry).toFixed(2);
+      //getDistance(centerPoint, features[i].geometry);
+      card = `
+         <div class="card card-wide card-bar-blue" >
+          <div class="card-content" style="cursor: pointer;" id=card${i}>
               <h4 class="trailer-half">${attrs.NAME}</h4>
-              <p>Hospital: ${attrs.NAME}</p>
               <p>FIPS: ${attrs.STCTYFIPS}</p>
-              <p>x: ${features[i].geometry.x}</p>
-              <p>x: ${features[i].geometry.y}</p>
+              <p>${distanceToRadius} miles</p>
+              <a href="#" class="btn btn-fill leader-1">Directions</a>
           </div>
          </div>
      `;
       cardArray.push(card);
       cardsList.innerHTML += card;
     }
+    initClickListener(cardsList);
+  }
+
+  function initClickListener(cardsList) {
+    cardsList.addEventListener('click', (evt) => {
+      console.log(evt);
+    });
+  }
+
+  /*** 
+     * To calculate distance between two points using geodesic length
+     * Need to create a polyline between the two points, then calculate
+     * The geodesic lenght of the polyline
+    ***/
+  function getDistance(centerPoint, facilityLocation) {
+    var polyline = new Polyline({
+      paths: [
+        [centerPoint.longitude, centerPoint.latitude],
+        [facilityLocation.longitude, facilityLocation.latitude]
+      ],
+      spatialReference: {wkid: 4326}
+    });
+
+    return geometryEngine.geodesicLength(polyline, "miles");
   }
 
 });
