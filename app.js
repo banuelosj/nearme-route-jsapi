@@ -107,8 +107,12 @@ require([
     query.geometry = buffer;
 
     layer.queryFeatures(query).then((results) => {
-      displayLocations(results.features);
-      //populateCards();
+      if (results.length > 0) {
+        displayLocations(results.features);
+        populateCards(results.features);
+      } else {
+        console.log("no results returned from query");
+      }
     });
   }
 
@@ -131,5 +135,22 @@ require([
       });
       graphicsLayer.add(graphic);
     });
+  }
+
+  function populateCards(features) {
+    const cardArray = [];
+    for (let i = 0; i < features.length; i++) {
+      let card = `
+         <div class="card card-wide">
+         <div class="card-content">
+            <h4 class="trailer-half">${features[i].areaname}</h4>
+            <p>City: ${features[i].areaname}</p>
+            <p>Population: ${features[i].pop2000}</p>
+            <p>State: ${features[i].st}</p>
+         </div>
+         </div>
+     `;
+      cardArray.push(card);
+    }
   }
 });
