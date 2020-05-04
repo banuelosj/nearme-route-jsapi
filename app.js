@@ -5,7 +5,8 @@ require([
   "esri/layers/GraphicsLayer",
   "esri/Graphic",
   "esri/geometry/geometryEngine",
-  "esri/geometry/Polyline"
+  "esri/geometry/Polyline",
+  "esri/widgets/Search"
 ], function (
   MapView,
   Map,
@@ -13,11 +14,12 @@ require([
   GraphicsLayer,
   Graphic,
   geometryEngine,
-  Polyline
+  Polyline,
+  Search
 ) {
   const radius = 5;
   const distanceUnits = "miles";
-  const graphicsLayer = new GraphicsLayer();
+  const facilityGraphicsLayer = new GraphicsLayer();
 
   const facilitiesLayer = new FeatureLayer({
     url:
@@ -27,7 +29,7 @@ require([
 
   const map = new Map({
     basemap: "streets",
-    layers: [graphicsLayer],
+    layers: [facilityGraphicsLayer],
   });
 
   const view = new MapView({
@@ -37,14 +39,38 @@ require([
     zoom: 12,
   });
 
+  const searchWidget = new Search({
+    view: view
+  });
+
+  view.when(() => {
+    view.ui.add(searchWidget, "top-right");
+    searchWidget.on('search-complete', searchHandler);
+  });
+
+  function searchHandler(searchResult) {
+    if(searchResult.results.length){
+      const searchPoint = searchResult.results[0].results[0].feature.geometry;
+
+      addPointToMap(searchPoint);
+      // create the buffer to display and for the query
+      const buffer = addBuffer(searchPoint);
+      findFacilities(buffer, facilitiesLayer, searchPoint);
+    } else {
+      console.log('no search results found');
+    }
+    
+  }
+
   view.on("click", clickHandler);
 
   function clickHandler(event) {
     view.hitTest(event).then((response) => {
       if (response.results.length) {
         const graphic = response.results.filter((result) => {
-          return result.graphic.layer === facilitiesLayer;
+          return result.graphic.layer === facilityGraphicsLayer;
         })[0].graphic;
+        console.log(graphic);
       } else {
         const mapPoint = view.toMap(response.screenPoint);
         addPointToMap(mapPoint);
@@ -120,7 +146,7 @@ require([
 
   function displayLocations(features) {
     //clear existing graphics first
-    graphicsLayer.removeAll();
+    facilityGraphicsLayer.removeAll();
 
     const facilitySymbol = {
       type: "simple-marker",
@@ -135,7 +161,7 @@ require([
         geometry: feature.geometry,
         symbol: facilitySymbol,
       });
-      graphicsLayer.add(graphic);
+      facilityGraphicsLayer.add(graphic);
     });
   }
 
@@ -156,7 +182,7 @@ require([
               <h4 class="trailer-half">${attrs.NAME}</h4>
               <p>FIPS: ${attrs.STCTYFIPS}</p>
               <p>${distanceToRadius} miles</p>
-              <a href="https://www.google.com/maps/search/?api=1&query=${locationGeometry.latitude},${locationGeometry.longitude}" class="btn btn-fill leader-1">Directions</a>
+              <a href="https://www.google.com/maps/search/?api=1&query=${locationGeometry.latitude},${locationGeometry.longitude}" class="btn btn-fill leader-1" target="_blank">Directions</a>
           </div>
          </div>
      `;
