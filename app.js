@@ -138,7 +138,15 @@ require([
         displayLocations(results.features);
         populateCards(results.features, centerPoint);
       } else {
+        // clear the panel
+        const cardList = document.getElementById("cardsList");
+        const panelDiv = document.getElementById("panelTitle");
+        panelDiv.innerHTML = `Sorry no hospitals founds within ${radius} ${distanceUnits}.`;
+        cardList.innerHTML = "";
         console.log("no results returned from query");
+
+        // clear the graphics
+        facilityGraphicsLayer.removeAll();
       }
     });
   }
