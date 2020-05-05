@@ -6,7 +6,7 @@ require([
   "esri/Graphic",
   "esri/geometry/geometryEngine",
   "esri/geometry/Polyline",
-  "esri/widgets/Search"
+  "esri/widgets/Search",
 ], function (
   MapView,
   Map,
@@ -40,16 +40,16 @@ require([
   });
 
   const searchWidget = new Search({
-    view: view
+    view: view,
   });
 
   view.when(() => {
     view.ui.add(searchWidget, "top-right");
-    searchWidget.on('search-complete', searchHandler);
+    searchWidget.on("search-complete", searchHandler);
   });
 
   function searchHandler(searchResult) {
-    if(searchResult.results.length){
+    if (searchResult.results.length) {
       const searchPoint = searchResult.results[0].results[0].feature.geometry;
 
       addPointToMap(searchPoint);
@@ -57,9 +57,8 @@ require([
       const buffer = addBuffer(searchPoint);
       findFacilities(buffer, facilitiesLayer, searchPoint);
     } else {
-      console.log('no search results found');
+      console.log("no search results found");
     }
-    
   }
 
   view.on("click", clickHandler);
@@ -167,52 +166,83 @@ require([
 
   function populateCards(features, centerPoint) {
     const cardArray = [];
-    const cardsList = document.getElementById('cardsList');
-    cardsList.innerHTML = '';
-    let card = '';
+    const cardsList = document.getElementById("cardsList");
+    const panelTitle = document.getElementById("panelTitle");
 
+    //populate panel title with results
+    const panelText = `
+      There is a total of ${features.length} hospitals within ${radius} ${distanceUnits}.
+   `;
+    panelTitle.innerHTML = panelText;
+
+    // clear existing children
+    cardsList.innerHTML = "";
+    let card = "";
+
+    //  for (let i = 0; i < features.length; i++) {
+    //    const attrs = features[i].attributes;
+    //    const locationGeometry = features[i].geometry;
+    //    const distanceToRadius = getDistance(centerPoint, locationGeometry).toFixed(2);
+    //    //getDistance(centerPoint, features[i].geometry);
+    //    card = `
+    //       <div class="card card-wide card-bar-blue" >
+    //        <div class="card-content" style="cursor: pointer;" id=card${i}>
+    //            <h4 class="trailer-half">${attrs.NAME}</h4>
+    //            <p>FIPS: ${attrs.STCTYFIPS}</p>
+    //            <p>${distanceToRadius} miles</p>
+    //            <a href="https://www.google.com/maps/search/?api=1&query=${locationGeometry.latitude},${locationGeometry.longitude}" class="btn btn-fill leader-1" target="_blank">Directions</a>
+    //        </div>
+    //       </div>
+    //   `;
     for (let i = 0; i < features.length; i++) {
       const attrs = features[i].attributes;
       const locationGeometry = features[i].geometry;
-      const distanceToRadius = getDistance(centerPoint, locationGeometry).toFixed(2);
+      const distanceToRadius = getDistance(
+        centerPoint,
+        locationGeometry
+      ).toFixed(2);
+      const cardDiv = document.createElement("div");
+      cardDiv.id = `card${i}`;
       //getDistance(centerPoint, features[i].geometry);
       card = `
-         <div class="card card-wide card-bar-blue" >
-          <div class="card-content" style="cursor: pointer;" id=card${i}>
-              <h4 class="trailer-half">${attrs.NAME}</h4>
-              <p>FIPS: ${attrs.STCTYFIPS}</p>
-              <p>${distanceToRadius} miles</p>
-              <a href="https://www.google.com/maps/search/?api=1&query=${locationGeometry.latitude},${locationGeometry.longitude}" class="btn btn-fill leader-1" target="_blank">Directions</a>
-          </div>
+         <div class="card card-wide card-bar-blue">
+            <div class="card-content" style="cursor: pointer;" id=card${i}>
+               <h4 class="trailer-half">${attrs.NAME}</h4>
+               <p>FIPS: ${attrs.STCTYFIPS}</p>
+               <p>${distanceToRadius} miles</p>
+               <a href="https://www.google.com/maps/search/?api=1&query=${locationGeometry.latitude},${locationGeometry.longitude}" class="btn btn-fill leader-1" target="_blank">Directions</a>
+            </div>
          </div>
-     `;
-      cardArray.push(card);
-      cardsList.innerHTML += card;
+      `;
+      cardDiv.innerHTML = card;
+      cardArray.push(cardDiv);
+      cardsList.appendChild(cardDiv);
+      initClickListener(cardDiv);
+      //cardsList.innerHTML += card;
     }
-    initClickListener(cardsList);
+    //initClickListener(cardsList);
   }
 
-  function initClickListener(cardsList) {
-    cardsList.addEventListener('click', (evt) => {
+  function initClickListener(card) {
+    card.addEventListener("click", (evt) => {
       console.log(evt);
     });
   }
 
-  /*** 
-     * To calculate distance between two points using geodesic length
-     * Need to create a polyline between the two points, then calculate
-     * The geodesic lenght of the polyline
-    ***/
+  /***
+   * To calculate distance between two points using geodesic length
+   * Need to create a polyline between the two points, then calculate
+   * The geodesic lenght of the polyline
+   ***/
   function getDistance(centerPoint, facilityLocation) {
     var polyline = new Polyline({
       paths: [
         [centerPoint.longitude, centerPoint.latitude],
-        [facilityLocation.longitude, facilityLocation.latitude]
+        [facilityLocation.longitude, facilityLocation.latitude],
       ],
-      spatialReference: {wkid: 4326}
+      spatialReference: { wkid: 4326 },
     });
 
     return geometryEngine.geodesicLength(polyline, "miles");
   }
-
 });
