@@ -9,7 +9,7 @@ require([
   "esri/widgets/Search",
 ], function (
   MapView,
-  Map,
+  esriMap,
   FeatureLayer,
   GraphicsLayer,
   Graphic,
@@ -19,7 +19,11 @@ require([
 ) {
   const radius = 5;
   const distanceUnits = "miles";
+  const cardMap = new Map();
+
   const facilityGraphicsLayer = new GraphicsLayer();
+  let graphicsLayerView = null;
+  let highlight;
 
   const facilitiesLayer = new FeatureLayer({
     url:
@@ -27,7 +31,7 @@ require([
     outFields: ["*"],
   });
 
-  const map = new Map({
+  const map = new esriMap({
     basemap: "streets",
     layers: [facilityGraphicsLayer],
   });
@@ -37,6 +41,9 @@ require([
     map: map,
     center: [-118.165526, 34.032336],
     zoom: 12,
+    highlightOptions: {
+      color: "orange",
+    },
   });
 
   const searchWidget = new Search({
@@ -46,6 +53,10 @@ require([
   view.when(() => {
     view.ui.add(searchWidget, "top-right");
     searchWidget.on("search-complete", searchHandler);
+
+    view.whenLayerView(facilityGraphicsLayer).then((layerView) => {
+      graphicsLayerView = layerView;
+    });
   });
 
   function searchHandler(searchResult) {
@@ -65,12 +76,22 @@ require([
 
   function clickHandler(event) {
     view.hitTest(event).then((response) => {
+      if (highlight) {
+        highlight.remove();
+        highlight = null;
+      }
+
       if (response.results.length) {
         const graphic = response.results.filter((result) => {
           return result.graphic.layer === facilityGraphicsLayer;
         })[0].graphic;
-        console.log(graphic);
+
+        highlight = graphicsLayerView.highlight(graphic);
       } else {
+        if (highlight) {
+          highlight.remove();
+          highlight = null;
+        }
         const mapPoint = view.toMap(response.screenPoint);
         addPointToMap(mapPoint);
         // create the buffer to display and for the query
@@ -91,7 +112,7 @@ require([
       path:
         "M15.999 0C11.214 0 8 1.805 8 6.5v17l7.999 8.5L24 23.5v-17C24 1.805 20.786 0 15.999 0z",
       color: "#de2900",
-      size: "35px",
+      size: "30px",
     };
 
     const pointGraphic = new Graphic({
@@ -160,7 +181,7 @@ require([
       path:
         "M15.999 0C11.214 0 8 1.805 8 6.5v17l7.999 8.5L24 23.5v-17C24 1.805 20.786 0 15.999 0zM16 14.402A4.4 4.4 0 0 1 11.601 10a4.4 4.4 0 1 1 8.798 0A4.4 4.4 0 0 1 16 14.402z",
       color: "#0079C1",
-      size: "15px",
+      size: "25px",
     };
 
     features.forEach((feature) => {
@@ -173,7 +194,7 @@ require([
   }
 
   function populateCards(features, centerPoint) {
-    const cardArray = [];
+    cardMap.clear();
     const cardsList = document.getElementById("cardsList");
     const panelTitle = document.getElementById("panelTitle");
 
@@ -187,21 +208,6 @@ require([
     cardsList.innerHTML = "";
     let card = "";
 
-    //  for (let i = 0; i < features.length; i++) {
-    //    const attrs = features[i].attributes;
-    //    const locationGeometry = features[i].geometry;
-    //    const distanceToRadius = getDistance(centerPoint, locationGeometry).toFixed(2);
-    //    //getDistance(centerPoint, features[i].geometry);
-    //    card = `
-    //       <div class="card card-wide card-bar-blue" >
-    //        <div class="card-content" style="cursor: pointer;" id=card${i}>
-    //            <h4 class="trailer-half">${attrs.NAME}</h4>
-    //            <p>FIPS: ${attrs.STCTYFIPS}</p>
-    //            <p>${distanceToRadius} miles</p>
-    //            <a href="https://www.google.com/maps/search/?api=1&query=${locationGeometry.latitude},${locationGeometry.longitude}" class="btn btn-fill leader-1" target="_blank">Directions</a>
-    //        </div>
-    //       </div>
-    //   `;
     for (let i = 0; i < features.length; i++) {
       const attrs = features[i].attributes;
       const locationGeometry = features[i].geometry;
@@ -209,12 +215,13 @@ require([
         centerPoint,
         locationGeometry
       ).toFixed(2);
+
       const cardDiv = document.createElement("div");
       cardDiv.id = `card${i}`;
-      //getDistance(centerPoint, features[i].geometry);
+
       card = `
          <div class="card card-wide card-bar-blue">
-            <div class="card-content" style="cursor: pointer;" id=card${i}>
+            <div class="card-content" style="cursor: pointer;">
                <h4 class="trailer-half">${attrs.NAME}</h4>
                <p>FIPS: ${attrs.STCTYFIPS}</p>
                <p>${distanceToRadius} miles</p>
@@ -222,18 +229,27 @@ require([
             </div>
          </div>
       `;
+
       cardDiv.innerHTML = card;
-      cardArray.push(cardDiv);
+
+      // populate the Map to use for card click listener
+      cardMap.set(cardDiv.id, attrs.NAME);
       cardsList.appendChild(cardDiv);
+
       initClickListener(cardDiv);
       //cardsList.innerHTML += card;
     }
-    //initClickListener(cardsList);
   }
 
-  function initClickListener(card) {
-    card.addEventListener("click", (evt) => {
-      console.log(evt);
+  function initClickListener(cardDiv) {
+    cardDiv.addEventListener("click", (evt) => {
+      console.log(cardDiv.id);
+      /**
+       * TODO:
+       * code to select feature on the map corresponding to
+       * its card, with highlight.
+       * Preferably
+       */
     });
   }
 
