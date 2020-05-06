@@ -156,7 +156,7 @@ require([
 
     layer.queryFeatures(query).then((results) => {
       if (results.features.length) {
-        displayLocations(results.features);
+        displayLocations(results.features, centerPoint);
         populateCards(results.features, centerPoint);
       } else {
         // clear the panel
@@ -172,7 +172,7 @@ require([
     });
   }
 
-  function displayLocations(features) {
+  function displayLocations(features, centerPoint) {
     //clear existing graphics first
     facilityGraphicsLayer.removeAll();
 
@@ -185,9 +185,19 @@ require([
     };
 
     features.forEach((feature) => {
+      const distanceToRadius = getDistance(
+        centerPoint,
+        feature.geometry
+      ).toFixed(2);
+
       const graphic = new Graphic({
         geometry: feature.geometry,
         symbol: facilitySymbol,
+        attributes: feature.attributes,
+        popupTemplate: {
+          title: `<b>{NAME}</b>`,
+          content: `<p><b>ID:</b> {STCTYFIPS}</p><p>${distanceToRadius} ${distanceUnits}`
+        }
       });
       facilityGraphicsLayer.add(graphic);
     });
@@ -233,7 +243,7 @@ require([
       cardDiv.innerHTML = card;
 
       // populate the Map to use for card click listener
-      cardMap.set(cardDiv.id, attrs.NAME);
+      cardMap.set(cardDiv.id, {name: attrs.NAME, geometry: locationGeometry});
       cardsList.appendChild(cardDiv);
 
       initClickListener(cardDiv);
@@ -243,13 +253,22 @@ require([
 
   function initClickListener(cardDiv) {
     cardDiv.addEventListener("click", (evt) => {
-      console.log(cardDiv.id);
-      /**
-       * TODO:
-       * code to select feature on the map corresponding to
-       * its card, with highlight.
-       * Preferably
-       */
+      const selectedCardGeometry = cardMap.get(cardDiv.id).geometry;
+      const selectedGraphic = new Graphic({
+        geometry: selectedCardGeometry
+      });
+
+      if(highlight) {
+        highlight.remove();
+        highlight = null;
+      }
+
+      view.goTo({
+        target: selectedGraphic,
+        zoom: 14
+      });
+      view.graphics.removeAll();
+      
     });
   }
 
