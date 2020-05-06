@@ -265,7 +265,7 @@ require([
 
       view.goTo({
         target: selectedGraphic,
-        zoom: 14
+        zoom: 16
       });
       view.graphics.removeAll();
       
