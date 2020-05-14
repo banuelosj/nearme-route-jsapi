@@ -21,8 +21,8 @@ require([
   Search,
   Locate
 ) {
-  const radius = 5;
-  const distanceUnits = "miles";
+  let radius = 5;
+  let distanceUnits = "miles";
   const cardMap = new Map();
 
   const facilityGraphicsLayer = new GraphicsLayer();
@@ -219,6 +219,7 @@ require([
   }
 
   function populateCards(features, centerPoint) {
+    const cardArray = [];
     cardMap.clear();
     const cardsList = document.getElementById("cardsList");
     const panelTitle = document.getElementById("panelTitle");
@@ -236,10 +237,7 @@ require([
     for (let i = 0; i < features.length; i++) {
       const attrs = features[i].attributes;
       const locationGeometry = features[i].geometry;
-      const distanceToRadius = getDistance(
-        centerPoint,
-        locationGeometry
-      ).toFixed(2);
+      const distanceToRadius = getDistance(centerPoint, locationGeometry);
 
       const cardDiv = document.createElement("div");
       cardDiv.id = `card${i}`;
@@ -249,8 +247,12 @@ require([
             <div class="card-content" style="cursor: pointer;">
                <h4 class="trailer-half">${attrs.NAME}</h4>
                <p>FIPS: ${attrs.STCTYFIPS}</p>
-               <p>${distanceToRadius} miles</p>
-               <a href="https://www.google.com/maps/search/?api=1&query=${locationGeometry.latitude},${locationGeometry.longitude}" class="btn btn-fill leader-1" target="_blank">Directions</a>
+               <p>${distanceToRadius.toFixed(2)} miles</p>
+               <a href="https://www.google.com/maps/search/?api=1&query=${
+                 locationGeometry.latitude
+               },${
+        locationGeometry.longitude
+      }" class="btn btn-fill leader-1" target="_blank">Directions</a>
             </div>
          </div>
       `;
@@ -258,9 +260,15 @@ require([
       cardDiv.innerHTML = card;
 
       // populate the Map to use for card click listener
-      cardMap.set(cardDiv.id, { name: attrs.NAME, geometry: locationGeometry });
-      cardsList.appendChild(cardDiv);
+      cardMap.set(cardDiv.id, {
+        name: attrs.NAME,
+        geometry: locationGeometry,
+        card: cardDiv,
+        distance: distanceToRadius,
+      });
 
+      //cardArray.sort((a, b) => (a.distance > b.distanceToRadius ? 1 : -1));
+      cardsList.appendChild(cardDiv);
       initClickListener(cardDiv);
       //cardsList.innerHTML += card;
     }
@@ -305,7 +313,6 @@ require([
 
   function searchNearMe(evt) {
     locateBtn.locate().then((result) => {
-      console.log(result);
       if (result.coords) {
         const locationPoint = new Point({
           latitude: result.coords.latitude,
@@ -318,5 +325,46 @@ require([
         findFacilities(buffer, facilitiesLayer, locationPoint);
       }
     });
+  }
+
+  /***
+   * Code for handling the radius filter via modal
+   ***/
+  const modalBtn = document.getElementById("modalBtn");
+  const modalDiv = document.getElementById("modalDiv");
+
+  modalBtn.onclick = function () {
+    // display radius filter
+    modalDiv.className = "js-modal modal-overlay is-active";
+  };
+
+  // okay
+  document.getElementsByClassName(
+    "btn js-modal-toggle"
+  )[0].onclick = function () {
+    radiusFilter();
+  };
+
+  // cancel
+  document.getElementsByClassName(
+    "btn btn-clear js-modal-toggle"
+  )[0].onclick = function () {
+    modalDiv.className = "js-modal modal-overlay";
+  };
+
+  // handles the filter applied on the radius search
+  function radiusFilter() {
+    modalDiv.className = "js-modal modal-overlay";
+    const selectDistance = document.getElementById("distanceSelect").value;
+    const selectUnits = document.getElementById("unitsSelect").value;
+
+    radius = selectDistance;
+    distanceUnits = selectUnits;
+
+    // clear to begin a new search
+    facilityGraphicsLayer.removeAll();
+    if (view.graphics) {
+      view.graphics.removeAll();
+    }
   }
 });
