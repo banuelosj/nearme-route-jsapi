@@ -6,7 +6,9 @@ require([
   "esri/Graphic",
   "esri/geometry/geometryEngine",
   "esri/geometry/Polyline",
+  "esri/geometry/Point",
   "esri/widgets/Search",
+  "esri/widgets/Locate",
 ], function (
   MapView,
   esriMap,
@@ -15,7 +17,9 @@ require([
   Graphic,
   geometryEngine,
   Polyline,
-  Search
+  Point,
+  Search,
+  Locate
 ) {
   const radius = 5;
   const distanceUnits = "miles";
@@ -46,12 +50,23 @@ require([
     },
   });
 
+  const nearMeBtn = document.getElementById("nearMeBtn");
+  const locateBtn = new Locate({
+    view: view,
+    scale: 50000,
+  });
+
+  nearMeBtn.onclick = function (evt) {
+    searchNearMe(evt);
+  };
+
   const searchWidget = new Search({
     view: view,
   });
 
   view.when(() => {
     view.ui.add(searchWidget, "top-right");
+    view.ui.add(nearMeBtn, "top-left");
     searchWidget.on("search-complete", searchHandler);
 
     view.whenLayerView(facilityGraphicsLayer).then((layerView) => {
@@ -126,7 +141,7 @@ require([
   function addBuffer(point) {
     const polySym = {
       type: "simple-fill", // autocasts as new SimpleFillSymbol()
-      color: [140, 140, 222, 0.5],
+      color: [140, 140, 222, 0.2],
       outline: {
         color: [0, 0, 0, 0.5],
         width: 2,
@@ -196,8 +211,8 @@ require([
         attributes: feature.attributes,
         popupTemplate: {
           title: `<b>{NAME}</b>`,
-          content: `<p><b>ID:</b> {STCTYFIPS}</p><p>${distanceToRadius} ${distanceUnits}`
-        }
+          content: `<p><b>ID:</b> {STCTYFIPS}</p><p>${distanceToRadius} ${distanceUnits}`,
+        },
       });
       facilityGraphicsLayer.add(graphic);
     });
@@ -243,7 +258,7 @@ require([
       cardDiv.innerHTML = card;
 
       // populate the Map to use for card click listener
-      cardMap.set(cardDiv.id, {name: attrs.NAME, geometry: locationGeometry});
+      cardMap.set(cardDiv.id, { name: attrs.NAME, geometry: locationGeometry });
       cardsList.appendChild(cardDiv);
 
       initClickListener(cardDiv);
@@ -255,20 +270,19 @@ require([
     cardDiv.addEventListener("click", (evt) => {
       const selectedCardGeometry = cardMap.get(cardDiv.id).geometry;
       const selectedGraphic = new Graphic({
-        geometry: selectedCardGeometry
+        geometry: selectedCardGeometry,
       });
 
-      if(highlight) {
+      if (highlight) {
         highlight.remove();
         highlight = null;
       }
 
       view.goTo({
         target: selectedGraphic,
-        zoom: 16
+        zoom: 18,
       });
-      view.graphics.removeAll();
-      
+      //view.graphics.removeAll();
     });
   }
 
@@ -287,5 +301,22 @@ require([
     });
 
     return geometryEngine.geodesicLength(polyline, "miles");
+  }
+
+  function searchNearMe(evt) {
+    locateBtn.locate().then((result) => {
+      console.log(result);
+      if (result.coords) {
+        const locationPoint = new Point({
+          latitude: result.coords.latitude,
+          longitude: result.coords.longitude,
+        });
+
+        addPointToMap(locationPoint);
+        // create the buffer to display and for the query
+        const buffer = addBuffer(locationPoint);
+        findFacilities(buffer, facilitiesLayer, locationPoint);
+      }
+    });
   }
 });
