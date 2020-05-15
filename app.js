@@ -267,12 +267,24 @@ require([
         card: cardDiv,
         distance: distanceToRadius,
       });
-
-      //cardArray.sort((a, b) => (a.distance > b.distanceToRadius ? 1 : -1));
-      cardsList.appendChild(cardDiv);
-      initClickListener(cardDiv);
-      //cardsList.innerHTML += card;
     }
+
+    // sort the card map
+    sortTheCards(cardMap, cardsList);
+  }
+
+  function sortTheCards(cardsMap, cardsList) {
+    const sortedMap = new Map(
+      [...cardsMap.entries()].sort((a, b) =>
+        a[1].distance > b[1].distance ? 1 : -1
+      )
+    );
+
+    // add the cards to the ui with event listeners
+    sortedMap.forEach((value, key) => {
+      cardsList.appendChild(value.card);
+      initClickListener(value.card);
+    });
   }
 
   function initClickListener(cardDiv) {
