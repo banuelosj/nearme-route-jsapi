@@ -213,7 +213,11 @@ require([
         attributes: feature.attributes,
         popupTemplate: {
           title: `<b>{NAME}</b>`,
-          content: `<p><b>ID:</b> {STCTYFIPS}</p><p>${distanceToRadius} ${distanceUnits}`,
+          content: `
+            <p><b>ID:</b> {STCTYFIPS}</p>
+            <p>${distanceToRadius} ${distanceUnits}</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=${feature.geometry.latitude},${feature.geometry.longitude}" target="_blank"><u>Directions</u></a>
+          `,
         },
       });
       facilityGraphicsLayer.add(graphic);
