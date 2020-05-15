@@ -12,4 +12,10 @@ Application allows one to find the nearest hospitals, within a specified distanc
 4. One can also click on the NearMe button to use one's current location.
 5. Use the Refine Search button to change the buffer radius and units.
 
+## Built With
+
+- [ArcGIS JavaScript API](https://developers.arcgis.com/javascript/) - Using the 4.15 JavaScript API
+- [Calcite-Web](http://esri.github.io/calcite-web/documentation/)
+- [Semantic-UI](https://semantic-ui.com/)
+
 ## [Live Sample](https://banuelosj.github.io/nearme-route-jsapi/index.html)
