@@ -23,6 +23,7 @@ require([
 ) {
   let radius = 5;
   let distanceUnits = "miles";
+  let currentPointLocation = null;
   const cardMap = new Map();
 
   const facilityGraphicsLayer = new GraphicsLayer();
@@ -77,7 +78,6 @@ require([
   function searchHandler(searchResult) {
     if (searchResult.results.length) {
       const searchPoint = searchResult.results[0].results[0].feature.geometry;
-
       addPointToMap(searchPoint);
       // create the buffer to display and for the query
       const buffer = addBuffer(searchPoint);
@@ -139,6 +139,8 @@ require([
   }
 
   function addBuffer(point) {
+    currentPointLocation = point;
+
     const polySym = {
       type: "simple-fill", // autocasts as new SimpleFillSymbol()
       color: [140, 140, 222, 0.2],
@@ -223,7 +225,6 @@ require([
     cardMap.clear();
     const cardsList = document.getElementById("cardsList");
     const panelTitle = document.getElementById("panelTitle");
-
     //populate panel title with results
     const panelText = `
       There is a total of ${features.length} hospitals within ${radius} ${distanceUnits}.
@@ -362,9 +363,15 @@ require([
     distanceUnits = selectUnits;
 
     // clear to begin a new search
-    facilityGraphicsLayer.removeAll();
     if (view.graphics) {
       view.graphics.removeAll();
+      facilityGraphicsLayer.removeAll();
+
+      // set the new graphics with new radius
+      addPointToMap(currentPointLocation);
+      // create the buffer to display and for the query
+      const buffer = addBuffer(currentPointLocation);
+      findFacilities(buffer, facilitiesLayer, currentPointLocation);
     }
   }
 });
