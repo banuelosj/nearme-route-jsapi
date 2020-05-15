@@ -8,9 +8,11 @@ Application allows one to find the nearest hospitals, within a specified distanc
 
 1. Use the [Search Widget](https://developers.arcgis.com/javascript/latest/api-reference/esri-widgets-Search.html) to search for an address or use your current location.
 2. A circle buffer will be displayed on the map with pin graphics that represent the hospitals within the chosen distance range.
-3. One can click directly on the map instead of searching for an address.
-4. One can also click on the NearMe button to use one's current location.
-5. Use the Refine Search button to change the buffer radius and units.
+3. Select one of the hospital cards on the left panel to zoom to the hospital.
+4. Click on the pin graphic to view some information of the hospital, along with the ability to get directions to the location.
+5. One can click directly on the map instead of searching for an address.
+6. One can also click on the NearMe button to use one's current location.
+7. Use the Refine Search button to change the buffer radius and units.
 
 ## Built With
 
